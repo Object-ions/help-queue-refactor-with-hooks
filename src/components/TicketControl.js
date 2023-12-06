@@ -1,11 +1,17 @@
-import React, { useEffect ,useState } from "react";
+import React, { useEffect, useState } from "react";
 import NewTicketForm from "./NewTicketForm";
 import TicketList from "./TicketList";
 import EditTicketForm from "./EditTicketForm";
 import TicketDetail from "./TicketDetail";
-import db from './../firebase.js';
-import { collection, addDoc, onSnapshot, deleteDoc } from "firebase/firestore";
-
+import db from "./../firebase.js";
+import {
+  collection,
+  addDoc,
+  onSnapshot,
+  doc,
+  updateDoc,
+  deleteDoc,
+} from "firebase/firestore";
 
 function TicketControl() {
   // constructor(props) {
@@ -23,21 +29,21 @@ function TicketControl() {
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState(null);
 
-  useEffect(() => { 
+  useEffect(() => {
     const unSubscribe = onSnapshot(
-      collection(db, "tickets"), 
+      collection(db, "tickets"),
       (collectionSnapshot) => {
         const tickets = [];
         collectionSnapshot.forEach((doc) => {
-            tickets.push({
-              names: doc.data().names, 
-              location: doc.data().location, 
-              issue: doc.data().issue, 
-              id: doc.id
-            });
+          tickets.push({
+            names: doc.data().names,
+            location: doc.data().location,
+            issue: doc.data().issue,
+            id: doc.id,
+          });
         });
         setMainTicketList(tickets);
-      }, 
+      },
       (error) => {
         setError(error.message);
       }
@@ -55,10 +61,11 @@ function TicketControl() {
     }
   };
 
-  const handleDeletingTicket = (id) => {
-    
-    const newMainTicketList = mainTicketList.filter(ticket => ticket.id !== id);
-    setMainTicketList(newMainTicketList);
+  const handleDeletingTicket = async (id) => {
+    await deleteDoc(doc(db, "tickets", id));
+    setSelectedTicket(null);
+  };
+    // setMainTicketList(newMainTicketList);
     // const newMainTicketList = this.state.mainTicketList.filter(
     //   (ticket) => ticket.id !== id
     // );
@@ -66,33 +73,25 @@ function TicketControl() {
     //   mainTicketList: newMainTicketList,
     //   selectedTicket: null,
     // });
-    setSelectedTicket(null);
-  };
+  // };
 
   const handleEditClick = () => {
     // this.setState({ editing: true });
     setEditing(true);
   };
 
-  const handleEditingTicketInList = (ticketToEdit) => {
-    const editedMainTicketList = mainTicketList
-    .filter((ticket) => ticket.id !== selectedTicket.id)
-    .concat(ticketToEdit);
-    setMainTicketList(editedMainTicketList);
-      // this.setState({
-    //   mainTicketList: editedMainTicketList,
-    //   editing: false,
-    //   selectedTicket: null,
-    // });
+  const handleEditingTicketInList = async (ticketToEdit) => {
+    const ticketRef = doc(db, "tickets", ticketToEdit.id);
+    await updateDoc(ticketRef, ticketToEdit);
     setEditing(false);
     setSelectedTicket(null);
-  };
+  }
 
   const handleAddingNewTicketToList = async (newTicketData) => {
     const collectionRef = collection(db, "tickets");
     await addDoc(collectionRef, newTicketData);
     setFormVisibleOnPage(false);
-  }
+  };
 
   //same as above
   // const handleAddingNewTicketToList = async (newTicketData) => {
@@ -111,14 +110,14 @@ function TicketControl() {
     //   (ticket) => ticket.id === id
     // )[0];
     // this.setState({ selectedTicket: selectedTicket });
-    const selection = mainTicketList.filter(ticket => ticket.id === id)[0];
+    const selection = mainTicketList.filter((ticket) => ticket.id === id)[0];
     setSelectedTicket(selection);
   };
 
   let currentlyVisibleState = null;
   let buttonText = null;
-  if (error){
-    currentlyVisibleState = <p>There was an error: {error}</p>
+  if (error) {
+    currentlyVisibleState = <p>There was an error: {error}</p>;
   } else if (editing) {
     currentlyVisibleState = (
       <EditTicketForm
@@ -142,11 +141,12 @@ function TicketControl() {
     );
     buttonText = "Return to Ticket List";
   } else {
-    currentlyVisibleState = 
+    currentlyVisibleState = (
       <TicketList
         onTicketSelection={handleChangingSelectedTicket}
         ticketList={mainTicketList}
-      />;
+      />
+    );
     buttonText = "Add Ticket";
   }
   return (
