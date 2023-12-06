@@ -1,3 +1,7 @@
+npm install firebase,
+npm install router,
+npm install date-fns
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).

@@ -17,6 +17,15 @@ import {
 import { formatDistanceToNow } from "date-fns";
 
 function TicketControl() {
+  // constructor(props) {
+  //   super(props);
+  //   this.state = {
+  //     formVisibleOnPage: false,
+  //     mainTicketList: [],
+  //     selectedTicket: null,
+  //     editing: false
+  //   };
+  // }
   const [formVisibleOnPage, setFormVisibleOnPage] = useState(false);
   const [mainTicketList, setMainTicketList] = useState([]);
   const [selectedTicket, setSelectedTicket] = useState(null);
@@ -43,13 +52,12 @@ function TicketControl() {
   }, [mainTicketList]);
 
   useEffect(() => {
-    // new code below!
     const queryByTimestamp = query(
       collection(db, "tickets"),
       orderBy("timeOpen")
     );
+
     const unSubscribe = onSnapshot(
-      // new code below!
       queryByTimestamp,
       (querySnapshot) => {
         const tickets = [];
